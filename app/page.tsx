@@ -1,65 +1,139 @@
-import Image from "next/image";
+"use client";
+
+import axios from "axios";
+import { useCallback, useState } from "react";
+
+import CategoryNavigation from "@/components/home/CategoryNavigation";
+import Header from "@/components/home/Header";
+import Hero from "@/components/home/Hero";
+import ProductSection from "@/components/home/ProductSection";
+
+import type { Product } from "@/types";
+
+interface ApiProduct extends Omit<Product, "categoryId" | "categoryName"> {
+  categoryId:
+    | string
+    | {
+        _id: string;
+        name: string;
+      };
+
+  categoryName?: string;
+}
+
+interface ProductsResponse {
+  success: boolean;
+  count: number;
+  products: ApiProduct[];
+  message?: string;
+}
+
+interface ApiErrorResponse {
+  success?: boolean;
+  message?: string;
+  error?: string;
+}
+
+function getApiErrorMessage(error: unknown): string {
+  if (!axios.isAxiosError<ApiErrorResponse>(error)) {
+    return "Não foi possível carregar os produtos.";
+  }
+
+  return (
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    "Não foi possível carregar os produtos."
+  );
+}
+
+function normalizeProduct(product: ApiProduct): Product {
+  const categoryId =
+    typeof product.categoryId === "string"
+      ? product.categoryId
+      : product.categoryId._id;
+
+  const categoryName =
+    product.categoryName ||
+    (typeof product.categoryId === "object" ? product.categoryId.name : "");
+
+  return {
+    ...product,
+    categoryId,
+    categoryName,
+  };
+}
 
 export default function Home() {
+  const [activeCategory, setActiveCategory] = useState("");
+
+  const [products, setProducts] = useState<Product[]>([]);
+
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const loadProducts = useCallback(
+    async (categoryId: string): Promise<void> => {
+      try {
+        setIsLoadingProducts(true);
+        setErrorMessage("");
+
+        const response = await axios.get<ProductsResponse>(
+          "/api/product/products",
+          {
+            params: {
+              categoryId,
+              active: true,
+            },
+          },
+        );
+
+        console.log("Resposta dos produtos:", response.data);
+
+        const normalizedProducts = (response.data.products ?? []).map(
+          normalizeProduct,
+        );
+
+        setProducts(normalizedProducts);
+      } catch (error: unknown) {
+        console.error("Erro ao carregar produtos:", error);
+
+        setProducts([]);
+        setErrorMessage(getApiErrorMessage(error));
+      } finally {
+        setIsLoadingProducts(false);
+      }
+    },
+    [],
+  );
+
+  const handleCategoryChange = useCallback(
+    async (categoryId: string): Promise<void> => {
+      setActiveCategory(categoryId);
+
+      await loadProducts(categoryId);
+    },
+    [loadProducts],
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="min-h-screen bg-white text-zinc-950">
+      <Header />
+
+      <Hero />
+
+      <CategoryNavigation
+        activeCategory={activeCategory}
+        onCategoryChange={handleCategoryChange}
+      />
+
+      <ProductSection
+        products={products}
+        search=""
+        isLoading={isLoadingProducts}
+        errorMessage={errorMessage}
+        onRetry={() => loadProducts(activeCategory)}
+      />
+    </main>
   );
 }
