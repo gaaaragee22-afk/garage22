@@ -1,9 +1,15 @@
 "use client";
 
-import { MapPin, Menu, ShoppingBag, Store, Truck, X } from "lucide-react";
-
+import {
+  LogIn,
+  MapPin,
+  Menu,
+  ShoppingBag,
+  Store,
+  Truck,
+  X,
+} from "lucide-react";
 import Link from "next/link";
-
 import { useState } from "react";
 
 import { useCart } from "@/hooks/useCart";
@@ -40,6 +46,7 @@ export default function Header() {
           </div>
         </Link>
 
+        {/* AÇÕES DO DESKTOP */}
         <div className="ml-auto hidden items-center gap-2 lg:flex">
           <div className="flex items-center gap-2 rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700">
             <MapPin size={17} className="text-[#7f3c19]" />
@@ -52,6 +59,14 @@ export default function Header() {
           >
             <Truck size={19} />
             Acompanhar pedido
+          </Link>
+
+          <Link
+            href="/login"
+            className="flex h-12 items-center gap-2 rounded-2xl border border-[#7f3c19]/25 bg-white px-5 text-sm font-bold text-[#7f3c19] transition hover:border-[#7f3c19] hover:bg-[#7f3c19] hover:text-white"
+          >
+            <LogIn size={19} />
+            Entrar
           </Link>
 
           <button
@@ -71,40 +86,44 @@ export default function Header() {
           </button>
         </div>
 
-        <Link
-          href="/acompanhar-pedido"
-          aria-label="Acompanhar pedido"
-          className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#fdf4c3] text-[#7f3c19] transition hover:bg-[#f7e7a5] lg:hidden"
-        >
-          <Truck size={20} />
-        </Link>
+        {/* AÇÕES DO MOBILE */}
+        <div className="ml-auto flex items-center gap-2 lg:hidden">
+          <Link
+            href="/login"
+            aria-label="Entrar"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#7f3c19]/20 bg-[#fdf4c3] text-[#7f3c19] transition hover:bg-[#f7e7a5]"
+          >
+            <LogIn size={20} />
+          </Link>
 
-        <button
-          type="button"
-          onClick={openCart}
-          aria-label="Abrir sacola"
-          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900 transition hover:bg-zinc-200 lg:hidden"
-        >
-          <ShoppingBag size={20} />
+          <button
+            type="button"
+            onClick={openCart}
+            aria-label="Abrir sacola"
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-900 transition hover:bg-zinc-200"
+          >
+            <ShoppingBag size={20} />
 
-          {totalItems > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7f3c19] px-1 text-[10px] font-black text-white">
-              {totalItems}
-            </span>
-          )}
-        </button>
+            {totalItems > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7f3c19] px-1 text-[10px] font-black text-white">
+                {totalItems}
+              </span>
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen((current) => !current)}
-          aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={isMenuOpen}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-900 transition hover:bg-zinc-100 lg:hidden"
-        >
-          {isMenuOpen ? <X size={21} /> : <Menu size={21} />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((current) => !current)}
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={isMenuOpen}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-zinc-900 transition hover:bg-zinc-100"
+          >
+            {isMenuOpen ? <X size={21} /> : <Menu size={21} />}
+          </button>
+        </div>
       </div>
 
+      {/* MENU MOBILE */}
       {isMenuOpen && (
         <div className="border-t border-zinc-200 bg-white px-4 py-4 shadow-sm lg:hidden">
           <nav className="mx-auto grid max-w-7xl gap-2">
@@ -133,8 +152,17 @@ export default function Header() {
               Acompanhar pedido
             </Link>
 
-            <div className="flex items-center gap-2 rounded-xl bg-[#fdf4c3] px-4 py-3 text-sm font-bold text-[#7f5417]">
-              <MapPin size={17} />
+            <Link
+              href="/login"
+              onClick={closeMenu}
+              className="flex items-center gap-2 rounded-xl border border-[#7f3c19]/15 bg-[#fdf4c3]/60 px-4 py-3 text-sm font-bold text-[#7f3c19] transition hover:bg-[#fdf4c3]"
+            >
+              <LogIn size={18} />
+              Entrar na conta
+            </Link>
+
+            <div className="flex items-center gap-2 rounded-xl bg-zinc-100 px-4 py-3 text-sm font-bold text-zinc-700">
+              <MapPin size={17} className="text-[#7f3c19]" />
               Centro, Cuité
             </div>
           </nav>
